@@ -8,17 +8,20 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.widget.RemoteViews
-import kotlin.random.Random
 
 /**
  * Home screen "Big Eyes" widget.
  *
- * A home screen widget cannot run a smooth 60fps animation the way an activity
- * can (the launcher only lets us push occasional bitmap updates), so the widget
- * shows the eyes with a gentle random glance that refreshes on each system
- * update. Tap it to open the fully animated, finger-following Big Eyes.
+ * The provider draws a first frame right away so the widget looks right the
+ * moment it is placed, then hands the live animation over to
+ * [BigEyesWidgetService], which keeps the eyes moving and blinking on the home
+ * screen. Tapping the widget opens the full-screen Big Eyes.
  */
 class BigEyesWidgetProvider : AppWidgetProvider() {
+
+    override fun onEnabled(context: Context) {
+        BigEyesWidgetService.start(context)
+    }
 
     override fun onUpdate(
         context: Context,
@@ -26,8 +29,10 @@ class BigEyesWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray,
     ) {
         for (id in appWidgetIds) {
-            renderWidget(context, appWidgetManager, id)
+            drawStaticFrame(context, appWidgetManager, id)
         }
+        // Make sure the animator is running (e.g. after a reboot / re-add).
+        BigEyesWidgetService.start(context)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -36,45 +41,32 @@ class BigEyesWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: android.os.Bundle?,
     ) {
-        // Re-render when the widget is resized so the eyes stay crisp.
-        renderWidget(context, appWidgetManager, appWidgetId)
+        drawStaticFrame(context, appWidgetManager, appWidgetId)
     }
 
-    private fun renderWidget(
+    override fun onDisabled(context: Context) {
+        // Last widget removed — stop animating.
+        BigEyesWidgetService.stop(context)
+    }
+
+    /** A single open-eyed frame, shown until the service pushes live frames. */
+    private fun drawStaticFrame(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
     ) {
-        // Render at a fixed, high-enough resolution; the launcher scales it.
-        val px = 512
+        val px = 320
         val bitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-
-        // A subtle random glance so the eyes don't look frozen dead-center.
-        val gazeX = Random.nextDouble(-0.5, 0.5).toFloat()
-        val gazeY = Random.nextDouble(-0.35, 0.45).toFloat()
-
-        EyesRenderer.draw(
-            canvas = canvas,
-            width = px,
-            height = px,
-            gazeX = gazeX,
-            gazeY = gazeY,
-            blink = 0f,
-            drawBackground = true,
-        )
+        EyesRenderer.draw(Canvas(bitmap), px, px, 0f, 0f, 0f, drawBackground = true)
 
         val views = RemoteViews(context.packageName, R.layout.widget_big_eyes)
         views.setImageViewBitmap(R.id.widget_image, bitmap)
 
-        // Tap opens the fully animated Big Eyes.
         val intent = Intent(context, BigEyesActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pending = PendingIntent.getActivity(
-            context,
-            appWidgetId,
-            intent,
+            context, appWidgetId, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         views.setOnClickPendingIntent(R.id.widget_image, pending)

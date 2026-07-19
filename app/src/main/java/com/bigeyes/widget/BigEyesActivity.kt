@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 
-/** Immersive full-screen Big Eyes that follow your finger and the phone's tilt. */
+/**
+ * Full-screen Big Eyes. Opening the app also (reliably, from the foreground)
+ * starts [BigEyesWidgetService] so the home screen widget begins animating.
+ */
 class BigEyesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,5 +18,8 @@ class BigEyesActivity : AppCompatActivity() {
         val root = BigEyesView(this)
         root.setBackgroundColor(Color.BLACK)
         setContentView(root)
+
+        // Kick the widget animator to life while we're in the foreground.
+        BigEyesWidgetService.start(this)
     }
 }
