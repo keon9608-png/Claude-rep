@@ -7,7 +7,7 @@ import android.graphics.RectF
 import kotlin.math.min
 
 /** The expression the eyes are currently wearing. */
-enum class Face { NEUTRAL, HAPPY, SURPRISED }
+enum class Face { NEUTRAL, HAPPY, WINK_LEFT, WINK_RIGHT }
 
 /**
  * Draws the "Big Eyes" face onto any Canvas.
@@ -79,11 +79,14 @@ object EyesRenderer {
                 drawHappyEye(canvas, leftX, ey, eyeRadius)
                 drawHappyEye(canvas, rightX, ey, eyeRadius)
             }
-            Face.SURPRISED -> {
-                // Wide, startled eyes.
-                val r = eyeRadius * 1.35f
-                canvas.drawCircle(leftX, ey, r, eyePaint)
-                canvas.drawCircle(rightX, ey, r, eyePaint)
+            Face.WINK_LEFT -> {
+                // Left eye winks (a dash); right eye smiles (a half-disc).
+                drawDashEye(canvas, leftX, ey, eyeRadius)
+                drawHappyEye(canvas, rightX, ey, eyeRadius)
+            }
+            Face.WINK_RIGHT -> {
+                drawHappyEye(canvas, leftX, ey, eyeRadius)
+                drawDashEye(canvas, rightX, ey, eyeRadius)
             }
             Face.NEUTRAL -> {
                 val openFactor = 1f - blink.coerceIn(0f, 1f)
@@ -95,17 +98,21 @@ object EyesRenderer {
 
     private fun drawEye(canvas: Canvas, ex: Float, ey: Float, eyeRadius: Float, openFactor: Float) {
         if (openFactor <= 0.12f) {
-            // Closed/squinting eye: a short dash ("-").
-            val lineHalf = eyeRadius * 0.85f
-            val lineThick = eyeRadius * 0.16f
-            rect.set(ex - lineHalf, ey - lineThick, ex + lineHalf, ey + lineThick)
-            canvas.drawRoundRect(rect, lineThick, lineThick, eyePaint)
+            drawDashEye(canvas, ex, ey, eyeRadius)
             return
         }
         val save = canvas.save()
         canvas.scale(1f, openFactor, ex, ey)
         canvas.drawCircle(ex, ey, eyeRadius, eyePaint)
         canvas.restoreToCount(save)
+    }
+
+    private fun drawDashEye(canvas: Canvas, ex: Float, ey: Float, eyeRadius: Float) {
+        // A closed/winking eye: a short dash ("-").
+        val lineHalf = eyeRadius * 0.85f
+        val lineThick = eyeRadius * 0.16f
+        rect.set(ex - lineHalf, ey - lineThick, ex + lineHalf, ey + lineThick)
+        canvas.drawRoundRect(rect, lineThick, lineThick, eyePaint)
     }
 
     private fun drawHappyEye(canvas: Canvas, ex: Float, ey: Float, eyeRadius: Float) {

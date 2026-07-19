@@ -31,7 +31,7 @@ class EyesAnimator {
     private var lastStep = 0L
     private var nextGazeAt = 0L
 
-    private enum class Action { IDLE, BLINK, SQUINT, HAPPY, SURPRISED, SIDE_EYE }
+    private enum class Action { IDLE, BLINK, SQUINT, HAPPY, WINK, SIDE_EYE }
     private var action = Action.IDLE
     private var actionUntil = 0L
     private var blinksLeft = 0
@@ -105,7 +105,7 @@ class EyesAnimator {
                     finishAction(t)
                 }
             }
-            Action.SURPRISED -> {
+            Action.WINK -> {
                 if (t >= actionUntil) {
                     face = Face.NEUTRAL
                     finishAction(t)
@@ -136,12 +136,11 @@ class EyesAnimator {
                 action = Action.HAPPY; face = Face.HAPPY
                 actionUntil = t + 900L + Random.nextLong(0, 900L)
             }
-            in 76..87 -> {                // surprised ( O O )
-                action = Action.SURPRISED; face = Face.SURPRISED
+            in 76..87 -> {                // wink ( ◡ - )
+                face = if (Random.nextBoolean()) Face.WINK_LEFT else Face.WINK_RIGHT
+                action = Action.WINK
                 blinkTarget = 0f
-                targetX = 0f; targetY = -0.1f          // snap forward, startled
-                actionUntil = t + 550L + Random.nextLong(0, 500L)
-                nextGazeAt = actionUntil                // hold the stare
+                actionUntil = t + 700L + Random.nextLong(0, 500L)
             }
             else -> {                     // side glance ( ` ` )
                 val side = if (Random.nextBoolean()) 1f else -1f
