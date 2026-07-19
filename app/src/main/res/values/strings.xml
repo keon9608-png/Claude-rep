@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Big Eyes</string>
-    <string name="wallpaper_description">Eyes that follow your finger and the phone\'s tilt.</string>
+    <string name="wallpaper_description">Autonomous eyes that look around and change expression.</string>
+    <string name="change_color">색 바꾸기 · Change color</string>
 </resources>
