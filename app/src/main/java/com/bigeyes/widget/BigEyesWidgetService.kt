@@ -47,7 +47,9 @@ class BigEyesWidgetService : Service(), SensorEventListener {
     private var screenOn = true
 
     // Reused across frames to avoid allocating a bitmap every tick.
-    private val bmpSize = 320
+    // Kept modest so each RemoteViews update stays small over IPC, which lets
+    // the launcher redraw at a higher frame rate without falling behind.
+    private val bmpSize = 256
     private val bitmap: Bitmap = Bitmap.createBitmap(bmpSize, bmpSize, Bitmap.Config.ARGB_8888)
     private val canvas = Canvas(bitmap)
 
@@ -208,7 +210,8 @@ class BigEyesWidgetService : Service(), SensorEventListener {
 
     companion object {
         private const val NOTIF_ID = 42
-        private const val FRAME_MS = 66L // ~15 fps
+        private const val FRAME_MS = 33L // ~30 fps (widget IPC ceiling; the
+        // in-app view still runs at a smoother 60 fps)
 
         /** Best-effort start; safe to call repeatedly. */
         fun start(context: Context) {
