@@ -1,7 +1,6 @@
 package com.bigeyes.widget
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
@@ -72,7 +71,8 @@ class BigEyesWallpaperService : WallpaperService() {
                 canvas = holder.lockCanvas()
                 if (canvas != null) {
                     eyes.step()
-                    canvas.drawColor(Color.BLACK)
+                    val theme = Prefs.theme(this@BigEyesWallpaperService)
+                    canvas.drawColor(theme.bg)
                     EyesRenderer.draw(
                         canvas = canvas,
                         width = width,
@@ -81,7 +81,7 @@ class BigEyesWallpaperService : WallpaperService() {
                         gazeY = eyes.gazeY,
                         blink = eyes.blink,
                         face = eyes.face,
-                        accent = Prefs.accent(this@BigEyesWallpaperService),
+                        eyeColor = theme.eye,
                         drawBackground = false,
                     )
                 }

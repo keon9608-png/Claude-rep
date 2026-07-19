@@ -31,7 +31,7 @@ class EyesAnimator {
     private var lastStep = 0L
     private var nextGazeAt = 0L
 
-    private enum class Action { IDLE, BLINK, SQUINT, HAPPY }
+    private enum class Action { IDLE, BLINK, SQUINT, HAPPY, SURPRISED, SIDE_EYE }
     private var action = Action.IDLE
     private var actionUntil = 0L
     private var blinksLeft = 0
@@ -105,24 +105,51 @@ class EyesAnimator {
                     finishAction(t)
                 }
             }
+            Action.SURPRISED -> {
+                if (t >= actionUntil) {
+                    face = Face.NEUTRAL
+                    finishAction(t)
+                }
+            }
+            Action.SIDE_EYE -> {
+                if (t >= actionUntil) {
+                    blinkTarget = 0f
+                    finishAction(t)
+                }
+            }
         }
     }
 
     private fun startRandomAction(t: Long) {
         when (Random.nextInt(100)) {
-            in 0..44 -> {                 // single blink
+            in 0..31 -> {                 // single blink
                 action = Action.BLINK; blinksLeft = 1; blinkTarget = 1f
             }
-            in 45..64 -> {                // double blink
+            in 32..46 -> {                // double blink
                 action = Action.BLINK; blinksLeft = 2; blinkTarget = 1f
             }
-            in 65..84 -> {                // long content squint ( - - )
+            in 47..61 -> {                // long content squint ( - - )
                 action = Action.SQUINT; blinkTarget = 0.96f
                 actionUntil = t + 900L + Random.nextLong(0, 1200L)
             }
-            else -> {                     // happy ( ^ ^ )
+            in 62..75 -> {                // happy ( ^ ^ )
                 action = Action.HAPPY; face = Face.HAPPY
                 actionUntil = t + 900L + Random.nextLong(0, 900L)
+            }
+            in 76..87 -> {                // surprised ( O O )
+                action = Action.SURPRISED; face = Face.SURPRISED
+                blinkTarget = 0f
+                targetX = 0f; targetY = -0.1f          // snap forward, startled
+                actionUntil = t + 550L + Random.nextLong(0, 500L)
+                nextGazeAt = actionUntil                // hold the stare
+            }
+            else -> {                     // side glance ( ` ` )
+                val side = if (Random.nextBoolean()) 1f else -1f
+                action = Action.SIDE_EYE
+                blinkTarget = 0.4f                      // slightly narrowed
+                targetX = side * 0.95f; targetY = 0.12f
+                actionUntil = t + 800L + Random.nextLong(0, 900L)
+                nextGazeAt = actionUntil                // hold the glance
             }
         }
     }

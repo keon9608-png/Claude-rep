@@ -48,7 +48,7 @@ class BigEyesWidgetService : Service() {
     private var lastGazeY = Float.NaN
     private var lastBlink = Float.NaN
     private var lastFace: Face? = null
-    private var lastAccent = 0
+    private var lastTheme: Prefs.Theme? = null
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -114,20 +114,23 @@ class BigEyesWidgetService : Service() {
         val gy = eyes.gazeY
         val bl = eyes.blink
         val fc = eyes.face
-        val accent = Prefs.accent(this)
+        val theme = Prefs.theme(this)
 
         // Skip pushing an identical frame — saves battery while nothing changes.
         val changed = lastGazeX.isNaN() ||
             fc != lastFace ||
-            accent != lastAccent ||
+            theme != lastTheme ||
             abs(gx - lastGazeX) > 0.004f ||
             abs(gy - lastGazeY) > 0.004f ||
             abs(bl - lastBlink) > 0.004f
         if (!changed) return
-        lastGazeX = gx; lastGazeY = gy; lastBlink = bl; lastFace = fc; lastAccent = accent
+        lastGazeX = gx; lastGazeY = gy; lastBlink = bl; lastFace = fc; lastTheme = theme
 
         canvas.drawColor(0, PorterDuff.Mode.CLEAR)
-        EyesRenderer.draw(canvas, bmpSize, bmpSize, gx, gy, bl, fc, accent, drawBackground = true)
+        EyesRenderer.draw(
+            canvas, bmpSize, bmpSize, gx, gy, bl, fc,
+            eyeColor = theme.eye, bgColor = theme.bg, drawBackground = true,
+        )
 
         val views = RemoteViews(packageName, R.layout.widget_big_eyes)
         views.setImageViewBitmap(R.id.widget_image, bitmap)

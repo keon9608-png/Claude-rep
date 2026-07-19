@@ -1,38 +1,46 @@
 package com.bigeyes.widget
 
 import android.content.Context
+import android.graphics.Color
 
 /**
- * Remembers the chosen eye color across the widget, the view and the wallpaper.
- * All three run in the same process, so the in-memory [cached] value updates
- * instantly when the color is changed in the app.
+ * Remembers the chosen color theme across the widget, the view and the
+ * wallpaper. All three run in the same process, so the in-memory [cached] value
+ * updates instantly when the theme is changed in the app.
  */
 object Prefs {
     private const val FILE = "big_eyes"
-    private const val KEY_ACCENT = "accent"
+    private const val KEY_THEME = "theme"
 
-    const val WHITE = 0xFFFFFFFF.toInt()
-    const val ORANGE = 0xFFD97757.toInt() // Claude's signature warm orange
+    /** A theme is a background color plus an eye color. */
+    data class Theme(val bg: Int, val eye: Int)
 
-    private val palette = intArrayOf(WHITE, ORANGE)
+    private const val ORANGE = 0xFFD97757.toInt() // Claude's signature warm orange
+
+    // Classic: black square, white eyes. Claude: orange square, white eyes.
+    val themes = listOf(
+        Theme(bg = Color.BLACK, eye = Color.WHITE),
+        Theme(bg = ORANGE, eye = Color.WHITE),
+    )
 
     @Volatile
-    private var cached: Int? = null
+    private var cachedIndex: Int? = null
 
-    fun accent(context: Context): Int {
-        cached?.let { return it }
-        val v = prefs(context).getInt(KEY_ACCENT, WHITE)
-        cached = v
-        return v
+    fun theme(context: Context): Theme = themes[index(context)]
+
+    /** Advance to the next theme and persist it. Returns the new theme. */
+    fun cycleTheme(context: Context): Theme {
+        val next = (index(context) + 1) % themes.size
+        prefs(context).edit().putInt(KEY_THEME, next).apply()
+        cachedIndex = next
+        return themes[next]
     }
 
-    /** Advance to the next color and persist it. Returns the new color. */
-    fun cycleAccent(context: Context): Int {
-        val current = accent(context)
-        val next = palette[(palette.indexOf(current).coerceAtLeast(0) + 1) % palette.size]
-        prefs(context).edit().putInt(KEY_ACCENT, next).apply()
-        cached = next
-        return next
+    private fun index(context: Context): Int {
+        cachedIndex?.let { return it }
+        val v = prefs(context).getInt(KEY_THEME, 0).coerceIn(0, themes.size - 1)
+        cachedIndex = v
+        return v
     }
 
     private fun prefs(context: Context) =

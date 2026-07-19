@@ -8,17 +8,17 @@ import android.graphics.RectF
 import kotlin.math.min
 
 /** The expression the eyes are currently wearing. */
-enum class Face { NEUTRAL, HAPPY }
+enum class Face { NEUTRAL, HAPPY, SURPRISED }
 
 /**
  * Draws the "Big Eyes" face onto any Canvas.
  *
- * A black rounded square with two big **solid eyes** (no pupils). The whole
- * eyes shift around to "look", narrow into two dashes (blink / a long content
- * squint), or curve up into happy `^ ^` arcs.
+ * A rounded square with two big **solid eyes** (no pupils). The whole eyes
+ * shift around to "look", narrow into two dashes (blink / a content squint /
+ * a side glance), pop wide open (surprise), or curve up into happy `^ ^` arcs.
  *
- * All coordinates are computed from the given size so the same renderer works
- * for a tiny widget bitmap or a full-screen view.
+ * Colors are supplied by the caller so the same renderer draws both the classic
+ * black-on-white and the Claude orange theme.
  */
 object EyesRenderer {
 
@@ -34,12 +34,13 @@ object EyesRenderer {
     private val path = Path()
 
     /**
-     * @param gazeX  look direction on X, range [-1, 1]
-     * @param gazeY  look direction on Y, range [-1, 1]
-     * @param blink  0 = fully open, 1 = fully closed (used when [face] is NEUTRAL)
-     * @param face   the current expression
-     * @param accent eye color (white by default; orange for the Claude theme)
-     * @param drawBackground draw the black rounded square (false = transparent)
+     * @param gazeX    look direction on X, range [-1, 1]
+     * @param gazeY    look direction on Y, range [-1, 1]
+     * @param blink    0 = fully open, 1 = fully closed (used when [face] is NEUTRAL)
+     * @param face     the current expression
+     * @param eyeColor color of the eyes
+     * @param bgColor  color of the rounded square (drawn only if [drawBackground])
+     * @param drawBackground draw the rounded square (false = transparent)
      */
     fun draw(
         canvas: Canvas,
@@ -49,7 +50,8 @@ object EyesRenderer {
         gazeY: Float = 0f,
         blink: Float = 0f,
         face: Face = Face.NEUTRAL,
-        accent: Int = Color.WHITE,
+        eyeColor: Int = Color.WHITE,
+        bgColor: Int = Color.BLACK,
         drawBackground: Boolean = true,
     ) {
         val size = min(width, height).toFloat()
@@ -57,14 +59,15 @@ object EyesRenderer {
         val cy = height / 2f
 
         if (drawBackground) {
+            bgPaint.color = bgColor
             val corner = size * 0.24f
             val half = size / 2f
             rect.set(cx - half, cy - half, cx + half, cy + half)
             canvas.drawRoundRect(rect, corner, corner, bgPaint)
         }
 
-        eyePaint.color = accent
-        strokePaint.color = accent
+        eyePaint.color = eyeColor
+        strokePaint.color = eyeColor
 
         val eyeRadius = size * 0.15f
         val eyeGap = size * 0.19f
@@ -85,6 +88,12 @@ object EyesRenderer {
                 drawHappyEye(canvas, leftX, ey, eyeRadius)
                 drawHappyEye(canvas, rightX, ey, eyeRadius)
             }
+            Face.SURPRISED -> {
+                // Wide, startled eyes.
+                val r = eyeRadius * 1.35f
+                canvas.drawCircle(leftX, ey, r, eyePaint)
+                canvas.drawCircle(rightX, ey, r, eyePaint)
+            }
             Face.NEUTRAL -> {
                 val openFactor = 1f - blink.coerceIn(0f, 1f)
                 drawEye(canvas, leftX, ey, eyeRadius, openFactor)
@@ -95,8 +104,7 @@ object EyesRenderer {
 
     private fun drawEye(canvas: Canvas, ex: Float, ey: Float, eyeRadius: Float, openFactor: Float) {
         if (openFactor <= 0.12f) {
-            // Closed/squinting eye: a short dash ("-"), like a blink or a
-            // content, held gaze.
+            // Closed/squinting eye: a short dash ("-").
             val lineHalf = eyeRadius * 0.85f
             val lineThick = eyeRadius * 0.16f
             rect.set(ex - lineHalf, ey - lineThick, ex + lineHalf, ey + lineThick)

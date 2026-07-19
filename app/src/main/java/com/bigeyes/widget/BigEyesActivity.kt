@@ -21,12 +21,14 @@ import androidx.appcompat.app.AppCompatActivity
 class BigEyesActivity : AppCompatActivity() {
 
     private lateinit var eyesView: BigEyesView
+    private lateinit var root: FrameLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
+        val root = FrameLayout(this).apply { setBackgroundColor(Prefs.theme(this@BigEyesActivity).bg) }
+        this.root = root
 
         eyesView = BigEyesView(this)
         root.addView(
@@ -64,7 +66,8 @@ class BigEyesActivity : AppCompatActivity() {
     }
 
     private fun cycleColor() {
-        Prefs.cycleAccent(this)
+        val theme = Prefs.cycleTheme(this)
+        root.setBackgroundColor(theme.bg)
         eyesView.invalidate()
         refreshWidgets()
     }

@@ -57,11 +57,11 @@ class BigEyesWidgetProvider : AppWidgetProvider() {
     ) {
         val px = 320
         val bitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
+        val theme = Prefs.theme(context)
         EyesRenderer.draw(
             Canvas(bitmap), px, px,
-            gazeX = 0f, gazeY = 0f, blink = 0f,
-            face = Face.NEUTRAL, accent = Prefs.accent(context),
-            drawBackground = true,
+            gazeX = 0f, gazeY = 0f, blink = 0f, face = Face.NEUTRAL,
+            eyeColor = theme.eye, bgColor = theme.bg, drawBackground = true,
         )
 
         val views = RemoteViews(context.packageName, R.layout.widget_big_eyes)

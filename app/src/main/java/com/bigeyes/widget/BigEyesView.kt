@@ -36,7 +36,7 @@ class BigEyesView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        // Transparent background — the activity supplies the black backdrop.
+        // Transparent background — the activity fills the theme backdrop.
         EyesRenderer.draw(
             canvas = canvas,
             width = width,
@@ -45,7 +45,7 @@ class BigEyesView @JvmOverloads constructor(
             gazeY = eyes.gazeY,
             blink = eyes.blink,
             face = eyes.face,
-            accent = Prefs.accent(context),
+            eyeColor = Prefs.theme(context).eye,
             drawBackground = false,
         )
     }
