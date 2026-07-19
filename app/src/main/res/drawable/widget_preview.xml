@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Black rounded square -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M28,2 L80,2 A26,26 0 0,1 106,28 L106,80 A26,26 0 0,1 80,106 L28,106 A26,26 0 0,1 2,80 L2,28 A26,26 0 0,1 28,2 Z" />
+    <!-- Left eye -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,60 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" />
+    <!-- Right eye -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M56,60 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" />
+</vector>
