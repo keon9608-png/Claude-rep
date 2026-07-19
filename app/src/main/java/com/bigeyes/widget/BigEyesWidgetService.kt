@@ -79,10 +79,19 @@ class BigEyesWidgetService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIF_ID, buildNotification())
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        // Going foreground can be rejected if we were started from the
+        // background (Android 12+). Fail quietly instead of crashing; the app
+        // will start us again from the foreground next time it is opened.
+        try {
+            startForeground(NOTIF_ID, buildNotification())
+        } catch (t: Throwable) {
+            stopSelf()
+            return
+        }
 
         ContextCompat.registerReceiver(
             this,
@@ -101,9 +110,10 @@ class BigEyesWidgetService : Service(), SensorEventListener {
         // If there are no widgets left, there's nothing to animate.
         if (widgetIds().isEmpty()) {
             stopSelf()
-            return START_NOT_STICKY
         }
-        return START_STICKY
+        // Don't let the system silently restart us in the background (where we
+        // can't go foreground). The app re-starts us from the foreground.
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
