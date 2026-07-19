@@ -9,8 +9,6 @@ import android.hardware.SensorManager
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.abs
-import kotlin.random.Random
 
 /**
  * Full-screen, 60fps Big Eyes.
@@ -24,18 +22,7 @@ class BigEyesView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : View(context, attrs), SensorEventListener {
 
-    // Current gaze (rendered) and target gaze (where the eyes want to look).
-    private var gazeX = 0f
-    private var gazeY = 0f
-    private var targetX = 0f
-    private var targetY = 0f
-
-    // Blink state.
-    private var blink = 0f
-    private var blinkVel = 0f
-    private var nextBlinkAt = now() + blinkDelay()
-
-    private var touching = false
+    private val eyes = EyesAnimator()
 
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -44,7 +31,7 @@ class BigEyesView @JvmOverloads constructor(
 
     private val frame = object : Runnable {
         override fun run() {
-            step()
+            eyes.step()
             invalidate()
             postOnAnimation(this)
         }
@@ -71,9 +58,9 @@ class BigEyesView @JvmOverloads constructor(
             canvas = canvas,
             width = width,
             height = height,
-            gazeX = gazeX,
-            gazeY = gazeY,
-            blink = blink,
+            gazeX = eyes.gazeX,
+            gazeY = eyes.gazeY,
+            blink = eyes.blink,
             drawBackground = false,
         )
     }
@@ -82,57 +69,20 @@ class BigEyesView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN,
-            MotionEvent.ACTION_MOVE -> {
-                touching = true
-                targetX = ((event.x / width) * 2f - 1f).coerceIn(-1f, 1f)
-                targetY = ((event.y / height) * 2f - 1f).coerceIn(-1f, 1f)
-            }
+            MotionEvent.ACTION_MOVE -> eyes.setTouch(
+                (event.x / width) * 2f - 1f,
+                (event.y / height) * 2f - 1f,
+            )
             MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL -> touching = false
+            MotionEvent.ACTION_CANCEL -> eyes.clearTouch()
         }
         return true
     }
 
-    private fun step() {
-        // Ease the rendered gaze toward the target for a smooth follow.
-        gazeX += (targetX - gazeX) * 0.18f
-        gazeY += (targetY - gazeY) * 0.18f
-
-        // Blink animation: a quick close-then-open spring.
-        val t = now()
-        if (blink == 0f && blinkVel == 0f && t >= nextBlinkAt) {
-            blinkVel = 0.35f
-        }
-        if (blinkVel != 0f || blink != 0f) {
-            blink += blinkVel
-            if (blink >= 1f) {
-                blink = 1f
-                blinkVel = -0.35f
-            } else if (blink <= 0f && blinkVel < 0f) {
-                blink = 0f
-                blinkVel = 0f
-                nextBlinkAt = t + blinkDelay()
-            }
-        }
-    }
-
-    // --- Accelerometer (used only when not touching) ---
-
     override fun onSensorChanged(event: SensorEvent) {
-        if (touching) return
         // x tilts left/right, y tilts up/down. Scale down for a gentle drift.
-        val ax = event.values[0]
-        val ay = event.values[1]
-        val nx = (-ax / 6f).coerceIn(-1f, 1f)
-        val ny = ((ay - 3f) / 6f).coerceIn(-1f, 1f)
-        // Ignore tiny jitter so a still phone keeps still eyes.
-        if (abs(nx - targetX) > 0.02f) targetX = nx
-        if (abs(ny - targetY) > 0.02f) targetY = ny
+        eyes.setTilt(-event.values[0] / 6f, (event.values[1] - 3f) / 6f)
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-
-    private fun blinkDelay(): Long = 2200L + Random.nextLong(0, 3200L)
-
-    private fun now(): Long = System.currentTimeMillis()
 }
