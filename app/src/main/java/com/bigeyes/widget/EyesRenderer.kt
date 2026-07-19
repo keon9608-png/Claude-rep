@@ -3,7 +3,6 @@ package com.bigeyes.widget
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import kotlin.math.min
 
@@ -24,14 +23,8 @@ object EyesRenderer {
 
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
     private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
-    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeCap = Paint.Cap.ROUND
-    }
 
     private val rect = RectF()
-    private val path = Path()
 
     /**
      * @param gazeX    look direction on X, range [-1, 1]
@@ -67,7 +60,6 @@ object EyesRenderer {
         }
 
         eyePaint.color = eyeColor
-        strokePaint.color = eyeColor
 
         val eyeRadius = size * 0.15f
         val eyeGap = size * 0.19f
@@ -84,7 +76,6 @@ object EyesRenderer {
 
         when (face) {
             Face.HAPPY -> {
-                strokePaint.strokeWidth = eyeRadius * 0.44f
                 drawHappyEye(canvas, leftX, ey, eyeRadius)
                 drawHappyEye(canvas, rightX, ey, eyeRadius)
             }
@@ -118,12 +109,10 @@ object EyesRenderer {
     }
 
     private fun drawHappyEye(canvas: Canvas, ex: Float, ey: Float, eyeRadius: Float) {
-        // An upward arch ( ^ ) — a smiling, laughing eye.
-        val w = eyeRadius * 0.95f
-        val h = eyeRadius * 0.78f
-        path.reset()
-        path.moveTo(ex - w, ey + h * 0.45f)
-        path.quadTo(ex, ey - h, ex + w, ey + h * 0.45f)
-        canvas.drawPath(path, strokePaint)
+        // A filled half-disc, flat side down and dome up — a happy, smiling eye.
+        val r = eyeRadius * 1.08f
+        val baseY = ey + eyeRadius * 0.18f
+        rect.set(ex - r, baseY - r, ex + r, baseY + r)
+        canvas.drawArc(rect, 180f, 180f, true, eyePaint)
     }
 }
