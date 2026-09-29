@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:textAppearance="@android:style/TextAppearance.Material.Headline" />
+
+        <!-- 미리보기 -->
+        <FrameLayout
+            android:id="@+id/preview_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dark"
+            android:elevation="2dp"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp">
+
+            <TextView
+                android:id="@+id/preview_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:lineSpacingMultiplier="1.2" />
+        </FrameLayout>
+
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_mode" />
+
+        <RadioGroup
+            android:id="@+id/mode_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/mode_daily"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mode_daily" />
+
+            <TextView
+                style="@style/OptionDescription"
+                android:text="@string/mode_daily_desc" />
+
+            <RadioButton
+                android:id="@+id/mode_read"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mode_read" />
+
+            <TextView
+                style="@style/OptionDescription"
+                android:text="@string/mode_read_desc" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/position_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/SectionHeader"
+                android:text="@string/section_position" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:id="@+id/book_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Spinner
+                    android:id="@+id/chapter_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="110dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_theme" />
+
+        <RadioGroup
+            android:id="@+id/theme_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/theme_system"
+                style="@style/InlineRadio"
+                android:text="@string/theme_system" />
+
+            <RadioButton
+                android:id="@+id/theme_dark"
+                style="@style/InlineRadio"
+                android:text="@string/theme_dark" />
+
+            <RadioButton
+                android:id="@+id/theme_light"
+                style="@style/InlineRadio"
+                android:text="@string/theme_light" />
+        </RadioGroup>
+
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_font" />
+
+        <RadioGroup
+            android:id="@+id/font_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/font_sans"
+                style="@style/InlineRadio"
+                android:text="@string/font_sans" />
+
+            <RadioButton
+                android:id="@+id/font_serif"
+                style="@style/InlineRadio"
+                android:fontFamily="serif"
+                android:text="@string/font_serif" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/SectionHeader"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="@string/section_size" />
+
+            <TextView
+                android:id="@+id/size_label"
+                style="@style/SectionHeader"
+                android:layout_width="wrap_content" />
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/size_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Switch
+            android:id="@+id/numbers_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/numbers_switch"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/save_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="@string/save" />
+    </LinearLayout>
+</ScrollView>

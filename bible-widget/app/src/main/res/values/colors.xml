@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 위젯 "시스템 설정" 테마: 라이트 모드 -->
+    <color name="w_bg">#FFFFFFFF</color>
+    <color name="w_text">#FF000000</color>
+    <!-- 절 번호, 아래쪽 이동 줄: 검정/흰 배경 모두에서 읽히는 회색 -->
+    <color name="w_text_dim">#FF8C8C8C</color>
+
+    <color name="app_bg">#FFFFFFFF</color>
+    <color name="app_accent">#FF000000</color>
+    <color name="icon_bg">#FF000000</color>
+</resources>

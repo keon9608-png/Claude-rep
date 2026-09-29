@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 위젯 "시스템 설정" 테마: 다크 모드 -->
+    <color name="w_bg">#FF000000</color>
+    <color name="w_text">#FFFFFFFF</color>
+
+    <color name="app_bg">#FF000000</color>
+    <color name="app_accent">#FFFFFFFF</color>
+</resources>

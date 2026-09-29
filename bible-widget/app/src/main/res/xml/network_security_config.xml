@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- HTTPS 인증서 확인에 실패하는 기기에서만 HTTP로 다시 받는다 (BibleRepository.httpGet). -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">bskorea.or.kr</domain>
+    </domain-config>
+</network-security-config>

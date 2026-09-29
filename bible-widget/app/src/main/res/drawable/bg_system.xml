@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 휴대폰이 다크 모드면 검정, 아니면 흰색 (values-night/colors.xml) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/w_bg" />
+    <corners android:radius="@dimen/widget_radius" />
+</shape>

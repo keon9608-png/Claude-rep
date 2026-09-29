@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 펼친 책 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M52.5,41 C46.5,37 39.5,36 32,37 L32,72 C39.5,71 46.5,72 52.5,76 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M55.5,41 C61.5,37 68.5,36 76,37 L76,72 C68.5,71 61.5,72 55.5,76 Z" />
+</vector>

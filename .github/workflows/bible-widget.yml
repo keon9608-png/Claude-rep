@@ -1,0 +1,47 @@
+name: bible-widget
+
+on:
+  push:
+    paths:
+      - "bible-widget/**"
+      - ".github/workflows/bible-widget.yml"
+  pull_request:
+    paths:
+      - "bible-widget/**"
+      - ".github/workflows/bible-widget.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bible-widget
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # 같은 서명 키로 빌드해야 새 APK를 지우지 않고 덮어 설치할 수 있다.
+      - name: Restore debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: bible-widget-debug-keystore-v1
+
+      - name: Unit tests
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Build APK
+        run: ./gradlew --no-daemon assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bible-widget-apk
+          path: bible-widget/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
