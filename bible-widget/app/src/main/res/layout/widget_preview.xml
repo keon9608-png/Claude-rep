@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:includeFontPadding="false"
+        android:lineBreakWordStyle="phrase"
         android:lineSpacingMultiplier="1.2"
         android:text="@string/widget_preview_text"
         android:textColor="@color/w_text"

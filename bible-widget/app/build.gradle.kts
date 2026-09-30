@@ -15,6 +15,13 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            // CI는 캐시해 둔 키로 서명해서, 새 APK를 지우지 않고 덮어 설치할 수 있게 한다.
+            System.getenv("DEBUG_KEYSTORE")?.let { storeFile = file(it) }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

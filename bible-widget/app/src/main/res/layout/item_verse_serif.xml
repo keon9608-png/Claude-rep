@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:fontFamily="serif"
     android:includeFontPadding="false"
+    android:lineBreakWordStyle="phrase"
     android:lineSpacingMultiplier="1.2"
     android:paddingBottom="6dp"
     android:textColor="@color/w_text"

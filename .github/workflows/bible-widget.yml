@@ -28,17 +28,27 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       # 같은 서명 키로 빌드해야 새 APK를 지우지 않고 덮어 설치할 수 있다.
-      - name: Restore debug signing key
+      - name: Restore signing key
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
+          path: bible-widget/ci-debug.keystore
           key: bible-widget-debug-keystore-v1
+
+      - name: Create signing key if missing
+        run: |
+          test -f ci-debug.keystore || keytool -genkeypair -noprompt \
+            -keystore ci-debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
 
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: Build APK
         run: ./gradlew --no-daemon assembleDebug
+        env:
+          DEBUG_KEYSTORE: ${{ github.workspace }}/bible-widget/ci-debug.keystore
 
       - uses: actions/upload-artifact@v4
         with:
