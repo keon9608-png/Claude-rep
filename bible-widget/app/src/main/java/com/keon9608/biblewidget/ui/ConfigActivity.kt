@@ -1,22 +1,25 @@
 package com.keon9608.biblewidget.ui
 
 import android.app.Activity
+import android.app.WallpaperColors
+import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
 import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.CompoundButton
+import android.widget.ImageView
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
@@ -34,7 +37,9 @@ import com.keon9608.biblewidget.widget.WidgetTheme
 
 /**
  * 위젯 설정 화면. 위젯을 처음 놓을 때, 위젯 길게 누르기 → 설정(Android 12+), 위젯 아래쪽의 "창세기 1장"을 누를 때,
- * 앱 첫 화면의 위젯 목록에서 열린다.
+ * 앱 첫 화면의 "내 위젯 설정"에서 열린다.
+ *
+ * 위쪽 미리보기는 실제 배경화면 위에 그려서 투명도를 바로 확인할 수 있다.
  */
 class ConfigActivity : Activity() {
 
@@ -47,24 +52,29 @@ class ConfigActivity : Activity() {
     private lateinit var bookSpinner: Spinner
     private lateinit var chapterSpinner: Spinner
     private lateinit var positionSection: View
+    private lateinit var transparencyBar: SeekBar
+    private lateinit var transparencyLabel: TextView
     private lateinit var sizeBar: SeekBar
     private lateinit var sizeLabel: TextView
+    private lateinit var boldSwitch: CompoundButton
     private lateinit var numbersSwitch: CompoundButton
+    private lateinit var previewBg: ImageView
     private lateinit var preview: TextView
-    private lateinit var previewFrame: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-        // 사용자가 뒤로 가기로 나가면 위젯을 추가하지 않는다.
+        // 사용자가 취소하거나 뒤로 가기로 나가면 위젯을 추가하지 않는다.
         setResult(RESULT_CANCELED, resultIntent())
         if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
         }
         setContentView(R.layout.activity_config)
+        drawBehindSystemBars(darkStatusIcons = wallpaperWantsDarkText())
+        applyInsets()
 
-        val isNewWidget = !hasSavedConfig()
+        val isNewWidget = !WidgetPrefs.exists(this, widgetId)
         config = if (isNewWidget) {
             WidgetPrefs.loadLastUsed(this).copy(revision = 0)
         } else {
@@ -79,7 +89,28 @@ class ConfigActivity : Activity() {
         updatePreview()
     }
 
-    private fun hasSavedConfig(): Boolean = WidgetPrefs.exists(this, widgetId)
+    /** 미리보기는 상태 표시줄 아래에서 시작하고, 취소/저장 줄은 내비게이션 바 위에 둔다. */
+    private fun applyInsets() {
+        val root = findViewById<View>(R.id.root)
+        val previewArea = findViewById<View>(R.id.preview_area)
+        val bottomBar = findViewById<View>(R.id.bottom_bar)
+        root.doOnSystemBarInsets { left, top, right, bottom ->
+            root.setPadding(left, 0, right, 0)
+            previewArea.setPadding(previewArea.paddingLeft, top + dp(24), previewArea.paddingRight, previewArea.paddingBottom)
+            bottomBar.setPadding(bottomBar.paddingLeft, bottomBar.paddingTop, bottomBar.paddingRight, bottom + dp(4))
+        }
+    }
+
+    /** 배경화면이 밝으면 상태 표시줄 아이콘을 어둡게 (Android 12+에서만 알 수 있음). */
+    private fun wallpaperWantsDarkText(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val colors = try {
+            WallpaperManager.getInstance(this).getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+        } catch (e: RuntimeException) {
+            null
+        } ?: return false
+        return colors.colorHints and WallpaperColors.HINT_SUPPORTS_DARK_TEXT != 0
+    }
 
     private fun bindViews() {
         modeGroup = findViewById(R.id.mode_group)
@@ -88,11 +119,14 @@ class ConfigActivity : Activity() {
         bookSpinner = findViewById(R.id.book_spinner)
         chapterSpinner = findViewById(R.id.chapter_spinner)
         positionSection = findViewById(R.id.position_section)
+        transparencyBar = findViewById(R.id.transparency_bar)
+        transparencyLabel = findViewById(R.id.transparency_label)
         sizeBar = findViewById(R.id.size_bar)
         sizeLabel = findViewById(R.id.size_label)
+        boldSwitch = findViewById(R.id.bold_switch)
         numbersSwitch = findViewById(R.id.numbers_switch)
+        previewBg = findViewById(R.id.preview_bg)
         preview = findViewById(R.id.preview_text)
-        previewFrame = findViewById(R.id.preview_frame)
 
         bookSpinner.adapter = ArrayAdapter(
             this,
@@ -140,21 +174,36 @@ class ConfigActivity : Activity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
-        sizeBar.max = WidgetConfig.MAX_TEXT_SIZE - WidgetConfig.MIN_TEXT_SIZE
-        sizeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                config = config.copy(textSizeSp = WidgetConfig.MIN_TEXT_SIZE + progress)
-                updatePreview()
-            }
 
-            override fun onStartTrackingTouch(bar: SeekBar?) = Unit
-            override fun onStopTrackingTouch(bar: SeekBar?) = Unit
+        // 투명도: 0%, 10%, … 100% (11칸)
+        transparencyBar.max = 100 / WidgetConfig.TRANSPARENCY_STEP
+        transparencyBar.setOnSeekBarChangeListener(onStep { step ->
+            config = config.copy(transparency = step * WidgetConfig.TRANSPARENCY_STEP)
+            updatePreview()
         })
+        // 글자 크기: 12, 14, … 28 (9칸)
+        sizeBar.max = (WidgetConfig.MAX_TEXT_SIZE - WidgetConfig.MIN_TEXT_SIZE) / WidgetConfig.TEXT_SIZE_STEP
+        sizeBar.setOnSeekBarChangeListener(onStep { step ->
+            config = config.copy(textSizeSp = WidgetConfig.MIN_TEXT_SIZE + step * WidgetConfig.TEXT_SIZE_STEP)
+            updatePreview()
+        })
+
+        boldSwitch.setOnCheckedChangeListener { _, checked ->
+            config = config.copy(bold = checked)
+            updatePreview()
+        }
         numbersSwitch.setOnCheckedChangeListener { _, checked ->
             config = config.copy(showNumbers = checked)
             updatePreview()
         }
-        findViewById<Button>(R.id.save_button).setOnClickListener { save() }
+        findViewById<View>(R.id.cancel_button).setOnClickListener { finish() }
+        findViewById<View>(R.id.save_button).setOnClickListener { save() }
+    }
+
+    private fun onStep(block: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) = block(progress)
+        override fun onStartTrackingTouch(bar: SeekBar?) = Unit
+        override fun onStopTrackingTouch(bar: SeekBar?) = Unit
     }
 
     private fun applyConfigToViews() {
@@ -170,7 +219,12 @@ class ConfigActivity : Activity() {
         fontGroup.check(if (config.font == Font.SERIF) R.id.font_serif else R.id.font_sans)
         bookSpinner.setSelection(config.position.bookIndex, false)
         setChapterChoices(config.position)
-        sizeBar.progress = config.textSizeSp - WidgetConfig.MIN_TEXT_SIZE
+        // 이전 버전의 홀수 크기(예: 17)는 가장 가까운 칸으로 맞춘다.
+        val sizeStep = (config.textSizeSp - WidgetConfig.MIN_TEXT_SIZE + 1) / WidgetConfig.TEXT_SIZE_STEP
+        sizeBar.progress = sizeStep
+        config = config.copy(textSizeSp = WidgetConfig.MIN_TEXT_SIZE + sizeStep * WidgetConfig.TEXT_SIZE_STEP)
+        transparencyBar.progress = config.transparency / WidgetConfig.TRANSPARENCY_STEP
+        boldSwitch.isChecked = config.bold
         numbersSwitch.isChecked = config.showNumbers
     }
 
@@ -189,15 +243,16 @@ class ConfigActivity : Activity() {
         val dark = when (config.theme) {
             WidgetTheme.DARK -> true
             WidgetTheme.LIGHT -> false
-            WidgetTheme.SYSTEM ->
-                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+            WidgetTheme.SYSTEM -> isNightMode()
         }
-        previewFrame.setBackgroundResource(if (dark) R.drawable.bg_dark else R.drawable.bg_light)
+        previewBg.setImageResource(if (dark) R.drawable.bg_dark else R.drawable.bg_light)
+        previewBg.imageAlpha = config.backgroundAlpha
         preview.setTextColor(if (dark) Color.WHITE else Color.BLACK)
         preview.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.textSizeSp.toFloat())
         preview.typeface = if (config.font == Font.SERIF) Typeface.SERIF else Typeface.SANS_SERIF
-        sizeLabel.text = getString(R.string.text_size_value, config.textSizeSp)
         preview.text = previewText()
+        transparencyLabel.text = getString(R.string.transparency_value, config.transparency)
+        sizeLabel.text = getString(R.string.text_size_value, config.textSizeSp)
     }
 
     /** 이미 받아 둔 본문이 있으면 그걸로, 없으면 창세기 1:1(개역한글과 같은 문장)로 미리 보여준다. */
@@ -215,7 +270,9 @@ class ConfigActivity : Activity() {
                 out.setSpan(RelativeSizeSpan(0.72f), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 out.append("  ")
             }
+            val start = out.length
             out.append(text)
+            if (config.bold) out.setSpan(StyleSpan(Typeface.BOLD), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         return out
     }

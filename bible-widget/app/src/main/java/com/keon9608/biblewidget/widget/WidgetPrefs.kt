@@ -16,15 +16,24 @@ data class WidgetConfig(
     val theme: WidgetTheme = WidgetTheme.SYSTEM,
     val font: Font = Font.SANS,
     val textSizeSp: Int = DEFAULT_TEXT_SIZE,
+    val bold: Boolean = false,
+    /** 배경 투명도(%). 0이면 불투명, 100이면 배경 없이 글자만. */
+    val transparency: Int = 0,
     val showNumbers: Boolean = true,
     val position: ChapterRef = ChapterRef(0, 1),
     /** 다시 시도할 때 올려서 목록을 새로 불러오게 한다. */
     val revision: Int = 0,
 ) {
+    /** 배경 그림에 쓸 알파값(0–255). */
+    val backgroundAlpha: Int get() = Math.round(255 * (100 - transparency) / 100f)
+
     companion object {
-        const val DEFAULT_TEXT_SIZE = 17
+        const val DEFAULT_TEXT_SIZE = 18
         const val MIN_TEXT_SIZE = 12
         const val MAX_TEXT_SIZE = 28
+        /** 글자 크기 슬라이더 한 칸 = 2sp. 12…28이면 9칸. */
+        const val TEXT_SIZE_STEP = 2
+        const val TRANSPARENCY_STEP = 10
     }
 }
 
@@ -43,6 +52,8 @@ object WidgetPrefs {
             font = enumOr(p.getString(k + "font", null), defaults.font),
             textSizeSp = p.getInt(k + "size", defaults.textSizeSp)
                 .coerceIn(WidgetConfig.MIN_TEXT_SIZE, WidgetConfig.MAX_TEXT_SIZE),
+            bold = p.getBoolean(k + "bold", defaults.bold),
+            transparency = p.getInt(k + "transparency", defaults.transparency).coerceIn(0, 100),
             showNumbers = p.getBoolean(k + "numbers", defaults.showNumbers),
             position = ChapterRef(bookIndex, chapter),
             revision = p.getInt(k + "rev", 0),
@@ -56,6 +67,8 @@ object WidgetPrefs {
             .putString(k + "theme", config.theme.name)
             .putString(k + "font", config.font.name)
             .putInt(k + "size", config.textSizeSp)
+            .putBoolean(k + "bold", config.bold)
+            .putInt(k + "transparency", config.transparency)
             .putBoolean(k + "numbers", config.showNumbers)
             .putInt(k + "book", config.position.bookIndex)
             .putInt(k + "chapter", config.position.chapter)

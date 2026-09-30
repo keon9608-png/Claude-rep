@@ -17,23 +17,31 @@
     <string name="mode_read">성경 읽기</string>
     <string name="mode_read_desc">한 장을 스크롤해서 읽어요. 장 끝에서 ‘다음 장 ›’을 누르면 넘어가요.</string>
     <string name="section_position">읽을 위치</string>
-    <string name="section_theme">테마</string>
-    <string name="theme_system">시스템 설정</string>
+    <string name="section_theme">배경 색상</string>
+    <string name="theme_system">휴대전화 설정 따름</string>
     <string name="theme_dark">다크</string>
     <string name="theme_light">라이트</string>
-    <string name="section_font">글꼴</string>
+    <string name="section_font">글자</string>
     <string name="font_sans">고딕</string>
     <string name="font_serif">명조</string>
     <string name="section_size">글자 크기</string>
     <string name="text_size_value">%1$d</string>
     <string name="numbers_switch">절 번호와 출처 표시</string>
+    <string name="bold_switch">글자 굵게</string>
+    <string name="transparency">투명도</string>
+    <string name="transparency_value">%1$d%%</string>
+    <string name="size_small">작게</string>
+    <string name="size_large">크게</string>
+    <string name="cancel">취소</string>
     <string name="save">저장</string>
     <string name="preview_sample">태초에 하나님이 천지를 창조하시니라</string>
 
     <string name="main_howto">홈 화면(또는 잠금화면)의 빈 곳을 길게 누른 뒤 위젯 목록에서 ‘말씀 위젯’을 끌어다 놓으세요.\n\n위젯 안을 위아래로 스크롤하면 본문을 계속 읽을 수 있어요. 성경 읽기 모드에서는 장의 맨 끝에 있는 ‘다음 장 ›’으로 넘기고, 가운데 장 이름을 누르면 설정이 열려요.</string>
+    <string name="chevron">›</string>
     <string name="pin_button">홈 화면에 위젯 추가</string>
-    <string name="my_widgets">내 위젯</string>
+    <string name="my_widgets">내 위젯 설정</string>
     <string name="no_widgets">아직 놓인 위젯이 없어요.</string>
-    <string name="widget_row">%1$d. %2$s · %3$s</string>
+    <string name="widget_row_title">위젯 %1$d · %2$s</string>
+    <string name="widget_row_detail">%1$s · 투명도 %2$d%% · 글자 %3$d</string>
     <string name="attribution">성경 본문: 대한성서공회 성경읽기(bskorea.or.kr) 개역개정판. 본문은 필요할 때 기기에서 받아 저장해 두고 씁니다. 개역개정판의 저작권은 대한성서공회에 있습니다.</string>
 </resources>

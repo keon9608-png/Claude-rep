@@ -43,7 +43,8 @@ object WidgetRenderer {
         val config = WidgetPrefs.load(context, widgetId)
         val views = RemoteViews(context.packageName, R.layout.widget)
 
-        views.setInt(android.R.id.background, "setBackgroundResource", backgroundRes(config.theme))
+        views.setImageViewResource(R.id.bg_image, backgroundRes(config.theme))
+        views.setInt(R.id.bg_image, "setImageAlpha", config.backgroundAlpha)
 
         val (horizontal, vertical) = padding(context, manager, widgetId, config)
         views.setViewPadding(R.id.list, horizontal, vertical, horizontal, vertical)
@@ -90,6 +91,7 @@ object WidgetRenderer {
             .appendQueryParameter("theme", c.theme.name)
             .appendQueryParameter("font", c.font.name)
             .appendQueryParameter("size", c.textSizeSp.toString())
+            .appendQueryParameter("bold", if (c.bold) "1" else "0")
             .appendQueryParameter("num", if (c.showNumbers) "1" else "0")
             .appendQueryParameter("rev", c.revision.toString())
         when (c.mode) {

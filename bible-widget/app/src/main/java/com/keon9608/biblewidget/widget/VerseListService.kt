@@ -3,10 +3,12 @@ package com.keon9608.biblewidget.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
@@ -109,21 +111,28 @@ private class VerseListFactory(
 
     /** "1  태초에 …". 장의 첫 절은 번호 대신 "창세기 1:1"처럼 위치를 붙인다. */
     private fun verseText(row: Row.VerseRow): CharSequence {
-        if (!config.showNumbers) return row.verse.text
-        val label = row.chapter?.let { "${it.book.name} ${it.chapter}:${row.verse.number}" }
-            ?: row.verse.number.toString()
-        return SpannableStringBuilder()
-            .appendDim(label)
-            .append("  ")
-            .append(row.verse.text)
+        val out = SpannableStringBuilder()
+        if (config.showNumbers) {
+            val label = row.chapter?.let { "${it.book.name} ${it.chapter}:${row.verse.number}" }
+                ?: row.verse.number.toString()
+            out.appendDim(label).append("  ")
+        }
+        return out.appendBody(row.verse.text)
     }
 
     /** "…채우시리라  빌립보서 4:19". 출처는 맨 끝에 작게 붙여 윗줄을 차지하지 않게 한다. */
     private fun dailyText(row: Row.DailyRow): CharSequence {
-        if (!config.showNumbers) return row.text
-        return SpannableStringBuilder(row.text)
-            .append("  ")
-            .appendDim(row.ref.label())
+        val out = SpannableStringBuilder().appendBody(row.text)
+        if (config.showNumbers) out.append("  ").appendDim(row.ref.label())
+        return out
+    }
+
+    /** 본문. "글자 굵게"를 켜면 본문만 굵게 한다(절 번호·출처는 그대로). */
+    private fun SpannableStringBuilder.appendBody(text: String): SpannableStringBuilder {
+        val start = length
+        append(text)
+        if (config.bold) setSpan(StyleSpan(Typeface.BOLD), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return this
     }
 
     private fun SpannableStringBuilder.appendDim(text: String): SpannableStringBuilder {

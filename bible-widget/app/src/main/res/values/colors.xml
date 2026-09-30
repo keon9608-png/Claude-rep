@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 위젯 "시스템 설정" 테마: 라이트 모드 -->
+    <!-- 위젯 "휴대전화 설정 따름" 테마: 라이트 모드 -->
     <color name="w_bg">#FFFFFFFF</color>
     <color name="w_text">#FF000000</color>
     <!-- 절 번호, 아래쪽 이동 줄: 검정/흰 배경 모두에서 읽히는 회색 -->
     <color name="w_text_dim">#FF8C8C8C</color>
 
-    <color name="app_bg">#FFFFFFFF</color>
-    <color name="app_accent">#FF000000</color>
+    <!-- 앱 화면 (One UI 느낌: 옅은 바탕 위에 둥근 카드) -->
+    <color name="app_bg">#FFF2F2F2</color>
+    <color name="card_bg">#FFFFFFFF</color>
+    <color name="divider">#FFE4E4E4</color>
+    <color name="text_primary">#FF111111</color>
+    <color name="text_secondary">#FF6E6E6E</color>
+    <color name="app_accent">#FF0072DE</color>
+    <color name="seek_track">#FFE1E1E1</color>
+    <color name="seek_tick">#FF9E9E9E</color>
     <color name="icon_bg">#FF000000</color>
 </resources>

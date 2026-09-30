@@ -4,8 +4,17 @@
     android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_system"
+    android:background="@drawable/bg_clip"
     android:clipToOutline="true">
+
+    <!-- 배경색. 글자는 그대로 두고 이 층의 투명도만 바꾼다. -->
+    <ImageView
+        android:id="@+id/bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/bg_system" />
 
     <ListView
         android:id="@+id/list"

@@ -5,8 +5,13 @@
         <item name="android:colorPrimary">@color/app_bg</item>
         <item name="android:colorPrimaryDark">@color/app_bg</item>
         <item name="android:windowBackground">@color/app_bg</item>
-        <item name="android:statusBarColor">@color/app_bg</item>
-        <item name="android:navigationBarColor">@color/app_bg</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+
+    <!-- 위젯 설정 화면: 미리보기 뒤에 실제 배경화면이 보이게 해서 투명도를 확인할 수 있게 한다. -->
+    <style name="AppTheme.Wallpaper">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 </resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 고리 모양 손잡이. 색은 thumbTint(강조색)로 칠한다. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#00000000" />
+    <stroke android:width="3dp" android:color="#FFFFFFFF" />
+    <size android:width="26dp" android:height="26dp" />
+</shape>
