@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import com.keon9608.biblewidget.core.ChapterRef
+import com.keon9608.biblewidget.core.ResponsiveReadings
 import com.keon9608.biblewidget.ui.ConfigActivity
 
 class BibleWidgetProvider : AppWidgetProvider() {
@@ -57,8 +57,8 @@ class BibleWidgetProvider : AppWidgetProvider() {
         val id = widgetId(intent)
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return
         when (intent.getIntExtra(WidgetRenderer.EXTRA_NAV, 0)) {
-            WidgetRenderer.NAV_PREV -> move(context, id) { it.prev() }
-            WidgetRenderer.NAV_NEXT -> move(context, id) { it.next() }
+            WidgetRenderer.NAV_PREV -> move(context, id, forward = false)
+            WidgetRenderer.NAV_NEXT -> move(context, id, forward = true)
             WidgetRenderer.NAV_RETRY -> retry(context, id)
             WidgetRenderer.NAV_SETTINGS -> context.startActivity(
                 Intent(context, ConfigActivity::class.java)
@@ -69,9 +69,16 @@ class BibleWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    private fun move(context: Context, id: Int, step: (ChapterRef) -> ChapterRef) {
+    /** 성경 읽기는 장을, 교독문은 교독문 번호를 넘긴다. */
+    private fun move(context: Context, id: Int, forward: Boolean) {
         val config = WidgetPrefs.load(context, id)
-        WidgetPrefs.save(context, id, config.copy(position = step(config.position)))
+        val moved = when (config.mode) {
+            Mode.RESPONSIVE -> config.copy(
+                reading = (if (forward) ResponsiveReadings.next(config.reading) else ResponsiveReadings.prev(config.reading)).number,
+            )
+            else -> config.copy(position = if (forward) config.position.next() else config.position.prev())
+        }
+        WidgetPrefs.save(context, id, moved)
         WidgetRenderer.update(context, AppWidgetManager.getInstance(context), id)
     }
 

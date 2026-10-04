@@ -28,6 +28,7 @@ import com.keon9608.biblewidget.R
 import com.keon9608.biblewidget.core.Bible
 import com.keon9608.biblewidget.core.BibleRepository
 import com.keon9608.biblewidget.core.ChapterRef
+import com.keon9608.biblewidget.core.ResponsiveReadings
 import com.keon9608.biblewidget.widget.Font
 import com.keon9608.biblewidget.widget.Mode
 import com.keon9608.biblewidget.widget.WidgetConfig
@@ -52,6 +53,8 @@ class ConfigActivity : Activity() {
     private lateinit var bookSpinner: Spinner
     private lateinit var chapterSpinner: Spinner
     private lateinit var positionSection: View
+    private lateinit var readingSection: View
+    private lateinit var readingSpinner: Spinner
     private lateinit var transparencyBar: SeekBar
     private lateinit var transparencyLabel: TextView
     private lateinit var sizeBar: SeekBar
@@ -119,6 +122,8 @@ class ConfigActivity : Activity() {
         bookSpinner = findViewById(R.id.book_spinner)
         chapterSpinner = findViewById(R.id.chapter_spinner)
         positionSection = findViewById(R.id.position_section)
+        readingSection = findViewById(R.id.reading_section)
+        readingSpinner = findViewById(R.id.reading_spinner)
         transparencyBar = findViewById(R.id.transparency_bar)
         transparencyLabel = findViewById(R.id.transparency_label)
         sizeBar = findViewById(R.id.size_bar)
@@ -133,11 +138,32 @@ class ConfigActivity : Activity() {
             android.R.layout.simple_spinner_item,
             Bible.books.map { it.name },
         ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        readingSpinner.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            ResponsiveReadings.available.map { it.label() },
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
         modeGroup.setOnCheckedChangeListener { _, id ->
-            config = config.copy(mode = if (id == R.id.mode_read) Mode.READ else Mode.DAILY)
-            positionSection.visibility = if (config.mode == Mode.READ) View.VISIBLE else View.GONE
+            config = config.copy(
+                mode = when (id) {
+                    R.id.mode_read -> Mode.READ
+                    R.id.mode_responsive -> Mode.RESPONSIVE
+                    else -> Mode.DAILY
+                },
+            )
+            showModeSections()
             updatePreview()
+        }
+        readingSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val reading = ResponsiveReadings.available.getOrNull(position) ?: return
+                if (reading.number == config.reading) return
+                config = config.copy(reading = reading.number)
+                updatePreview()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
         themeGroup.setOnCheckedChangeListener { _, id ->
             config = config.copy(
@@ -206,9 +232,27 @@ class ConfigActivity : Activity() {
         override fun onStopTrackingTouch(bar: SeekBar?) = Unit
     }
 
-    private fun applyConfigToViews() {
-        modeGroup.check(if (config.mode == Mode.READ) R.id.mode_read else R.id.mode_daily)
+    /** 성경 읽기면 책·장 선택, 교독문이면 교독문 선택을 보인다. 교독문은 회중 줄만 굵게 하므로 "글자 굵게"는 끈다. */
+    private fun showModeSections() {
         positionSection.visibility = if (config.mode == Mode.READ) View.VISIBLE else View.GONE
+        readingSection.visibility = if (config.mode == Mode.RESPONSIVE) View.VISIBLE else View.GONE
+        boldSwitch.isEnabled = config.mode != Mode.RESPONSIVE
+        boldSwitch.alpha = if (boldSwitch.isEnabled) 1f else 0.4f
+    }
+
+    private fun applyConfigToViews() {
+        modeGroup.check(
+            when (config.mode) {
+                Mode.DAILY -> R.id.mode_daily
+                Mode.READ -> R.id.mode_read
+                Mode.RESPONSIVE -> R.id.mode_responsive
+            },
+        )
+        showModeSections()
+        readingSpinner.setSelection(
+            ResponsiveReadings.available.indexOf(ResponsiveReadings.forNumber(config.reading)).coerceAtLeast(0),
+            false,
+        )
         themeGroup.check(
             when (config.theme) {
                 WidgetTheme.SYSTEM -> R.id.theme_system
@@ -257,6 +301,7 @@ class ConfigActivity : Activity() {
 
     /** 이미 받아 둔 본문이 있으면 그걸로, 없으면 창세기 1:1(개역한글과 같은 문장)로 미리 보여준다. */
     private fun previewText(): CharSequence {
+        if (config.mode == Mode.RESPONSIVE) return responsivePreview()
         val chapter = if (config.mode == Mode.READ) config.position else ChapterRef(0, 1)
         val verses = BibleRepository(filesDir).cached(chapter)?.take(3)
         val sample = verses?.map { it.number to it.text } ?: listOf(1 to getString(R.string.preview_sample))
@@ -273,6 +318,32 @@ class ConfigActivity : Activity() {
             val start = out.length
             out.append(text)
             if (config.bold) out.setSpan(StyleSpan(Typeface.BOLD), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        return out
+    }
+
+    /** 교독문 미리보기: 받아 둔 본문이 있으면 앞의 세 줄을 인도자/회중(굵게)으로 번갈아. */
+    private fun responsivePreview(): CharSequence {
+        val reading = ResponsiveReadings.forNumber(config.reading)
+        val range = reading.ranges.first()
+        val lines = BibleRepository(filesDir).cached(range.chapter)
+            ?.filter { range.contains(it.number) }
+            ?.take(3)
+            ?.map { it.text }
+            ?: listOf(getString(R.string.preview_sample))
+        val out = SpannableStringBuilder()
+        lines.forEachIndexed { i, text ->
+            if (i > 0) out.append("\n")
+            if (i == 0 && config.showNumbers) {
+                val start = out.length
+                out.append(getString(R.string.reading_prefix, reading.number))
+                out.setSpan(ForegroundColorSpan(WidgetRenderer.DIM_COLOR), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                out.setSpan(RelativeSizeSpan(0.72f), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                out.append("  ")
+            }
+            val start = out.length
+            out.append(text)
+            if (i % 2 == 1) out.setSpan(StyleSpan(Typeface.BOLD), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         return out
     }

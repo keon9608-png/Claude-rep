@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.keon9608.biblewidget.R
+import com.keon9608.biblewidget.core.ResponsiveReadings
 import com.keon9608.biblewidget.widget.BibleWidgetProvider
 import com.keon9608.biblewidget.widget.Mode
 import com.keon9608.biblewidget.widget.WidgetPrefs
@@ -52,6 +53,8 @@ class MainActivity : Activity() {
             val what = when (config.mode) {
                 Mode.DAILY -> getString(R.string.mode_daily)
                 Mode.READ -> config.position.label()
+                Mode.RESPONSIVE -> getString(R.string.reading_prefix, config.reading) + " " +
+                    ResponsiveReadings.forNumber(config.reading).title
             }
             val themeName = getString(
                 when (config.theme) {

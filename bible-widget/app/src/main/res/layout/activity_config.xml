@@ -98,7 +98,44 @@
                 <TextView
                     style="@style/OptionDescription"
                     android:text="@string/mode_read_desc" />
+
+                <View style="@style/Divider" />
+
+                <RadioButton
+                    android:id="@+id/mode_responsive"
+                    style="@style/CardRowRadio"
+                    android:text="@string/mode_responsive" />
+
+                <TextView
+                    style="@style/OptionDescription"
+                    android:text="@string/mode_responsive_desc" />
             </RadioGroup>
+
+            <!-- 교독문 선택 (교독문일 때만) -->
+            <LinearLayout
+                android:id="@+id/reading_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/SectionHeader"
+                    android:text="@string/section_reading" />
+
+                <LinearLayout
+                    style="@style/Card"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <Spinner
+                        android:id="@+id/reading_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp" />
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- 읽을 위치 (성경 읽기일 때만) -->
             <LinearLayout

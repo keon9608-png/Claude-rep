@@ -8,6 +8,9 @@
     <string name="load_failed">말씀을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 여기를 눌러 다시 시도하세요.</string>
     <string name="prev">‹ 이전 장</string>
     <string name="next">다음 장 ›</string>
+    <string name="prev_reading">‹ 이전</string>
+    <string name="next_reading">다음 ›</string>
+    <string name="reading_prefix">교독문 %1$d</string>
 
     <string name="config_title_new">위젯 만들기</string>
     <string name="config_title_edit">위젯 설정</string>
@@ -16,7 +19,10 @@
     <string name="mode_daily_desc">매일 한 구절이 바뀌어요. 4×1 크기에서는 한 줄로, 스크롤하면 나머지가 보여요.</string>
     <string name="mode_read">성경 읽기</string>
     <string name="mode_read_desc">한 장을 스크롤해서 읽어요. 장 끝에서 ‘다음 장 ›’을 누르면 넘어가요.</string>
+    <string name="mode_responsive">교독문</string>
+    <string name="mode_responsive_desc">새찬송가 교독문을 골라 읽어요. 인도자 부분은 보통 글씨, 회중 부분은 굵은 글씨로 번갈아 보여요.</string>
     <string name="section_position">읽을 위치</string>
+    <string name="section_reading">교독문 선택</string>
     <string name="section_theme">배경 색상</string>
     <string name="theme_system">휴대전화 설정 따름</string>
     <string name="theme_dark">다크</string>

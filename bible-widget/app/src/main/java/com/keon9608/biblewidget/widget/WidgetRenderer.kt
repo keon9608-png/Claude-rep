@@ -99,6 +99,7 @@ object WidgetRenderer {
             Mode.READ -> builder
                 .appendQueryParameter("book", c.position.bookIndex.toString())
                 .appendQueryParameter("chap", c.position.chapter.toString())
+            Mode.RESPONSIVE -> builder.appendQueryParameter("reading", c.reading.toString())
         }
         return builder.build()
     }

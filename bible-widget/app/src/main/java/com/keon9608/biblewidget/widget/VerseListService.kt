@@ -16,6 +16,8 @@ import com.keon9608.biblewidget.R
 import com.keon9608.biblewidget.core.BibleRepository
 import com.keon9608.biblewidget.core.ChapterRef
 import com.keon9608.biblewidget.core.DailyVerses
+import com.keon9608.biblewidget.core.ResponsiveReading
+import com.keon9608.biblewidget.core.ResponsiveReadings
 import com.keon9608.biblewidget.core.Verse
 import com.keon9608.biblewidget.core.VerseRef
 import java.time.LocalDate
@@ -33,7 +35,10 @@ class VerseListService : RemoteViewsService() {
 private sealed interface Row {
     data class VerseRow(val verse: Verse, val chapter: ChapterRef?) : Row
     data class DailyRow(val ref: VerseRef, val text: String) : Row
-    data class FooterRow(val chapter: ChapterRef) : Row
+    /** 교독문 한 줄. 인도자/회중이 번갈아 나오고, 회중 줄은 굵게. 첫 줄에는 [reading]이 붙는다. */
+    data class ReadingLine(val text: String, val congregation: Boolean, val reading: ResponsiveReading?) : Row
+    /** 맨 끝의 "‹ 이전 · [label] · 다음 ›" 줄 */
+    data class FooterRow(val label: String) : Row
     object ErrorRow : Row
 }
 
@@ -76,10 +81,26 @@ private class VerseListFactory(
                 prefetch(chapter.next())
                 val body = verses?.mapIndexed { i, v -> Row.VerseRow(v, chapter.takeIf { i == 0 }) }
                     ?: listOf(Row.ErrorRow)
-                body + Row.FooterRow(chapter)
+                body + Row.FooterRow(chapter.label())
+            }
+            Mode.RESPONSIVE -> {
+                val reading = ResponsiveReadings.forNumber(config.reading)
+                prefetch(ResponsiveReadings.next(reading.number).ranges.first().chapter)
+                readingLines(reading) + Row.FooterRow(reading.label())
             }
         }
         loaded = true
+    }
+
+    /** 교독문의 절들을 차례로 이어 붙이고 인도자/회중을 번갈아 정한다. 하나라도 못 받으면 오류 줄. */
+    private fun readingLines(reading: ResponsiveReading): List<Row> {
+        val texts = ArrayList<String>()
+        for (range in reading.ranges) {
+            val verses = repository.chapter(range.chapter) ?: return listOf(Row.ErrorRow)
+            verses.filter { range.contains(it.number) }.mapTo(texts) { it.text }
+        }
+        if (texts.isEmpty()) return listOf(Row.ErrorRow)
+        return texts.mapIndexed { i, text -> Row.ReadingLine(text, congregation = i % 2 == 1, reading.takeIf { i == 0 }) }
     }
 
     /** 다음에 읽을 장을 미리 받아 둔다(잠금화면에서 오프라인일 때 대비). */
@@ -93,10 +114,11 @@ private class VerseListFactory(
         return when (row) {
             is Row.VerseRow -> textRow(verseText(row))
             is Row.DailyRow -> textRow(dailyText(row))
+            is Row.ReadingLine -> textRow(readingText(row))
             is Row.ErrorRow -> textRow(context.getString(R.string.load_failed)).apply {
                 setOnClickFillInIntent(R.id.text, navIntent(WidgetRenderer.NAV_RETRY))
             }
-            is Row.FooterRow -> footerRow(row.chapter)
+            is Row.FooterRow -> footerRow(row.label)
         }
     }
 
@@ -127,6 +149,18 @@ private class VerseListFactory(
         return out
     }
 
+    /** 교독문 한 줄. 찬송가처럼 회중 줄만 굵게 ("글자 굵게" 설정은 쓰지 않는다). 첫 줄 앞에 "교독문 1"을 작게. */
+    private fun readingText(row: Row.ReadingLine): CharSequence {
+        val out = SpannableStringBuilder()
+        if (config.showNumbers && row.reading != null) {
+            out.appendDim(context.getString(R.string.reading_prefix, row.reading.number)).append("  ")
+        }
+        val start = out.length
+        out.append(row.text)
+        if (row.congregation) out.setSpan(StyleSpan(Typeface.BOLD), start, out.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return out
+    }
+
     /** 본문. "글자 굵게"를 켜면 본문만 굵게 한다(절 번호·출처는 그대로). */
     private fun SpannableStringBuilder.appendBody(text: String): SpannableStringBuilder {
         val start = length
@@ -143,10 +177,14 @@ private class VerseListFactory(
         return this
     }
 
-    private fun footerRow(chapter: ChapterRef): RemoteViews =
+    private fun footerRow(label: String): RemoteViews =
         RemoteViews(context.packageName, R.layout.item_footer).apply {
             val size = config.textSizeSp * 0.8f
-            setTextViewText(R.id.label, chapter.label())
+            setTextViewText(R.id.label, label)
+            if (config.mode == Mode.RESPONSIVE) {
+                setTextViewText(R.id.prev, context.getString(R.string.prev_reading))
+                setTextViewText(R.id.next, context.getString(R.string.next_reading))
+            }
             for (id in intArrayOf(R.id.prev, R.id.label, R.id.next)) {
                 setTextViewTextSize(id, TypedValue.COMPLEX_UNIT_SP, size)
             }

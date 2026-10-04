@@ -3,8 +3,9 @@ package com.keon9608.biblewidget.widget
 import android.content.Context
 import com.keon9608.biblewidget.core.Bible
 import com.keon9608.biblewidget.core.ChapterRef
+import com.keon9608.biblewidget.core.ResponsiveReadings
 
-enum class Mode { DAILY, READ }
+enum class Mode { DAILY, READ, RESPONSIVE }
 
 enum class WidgetTheme { SYSTEM, DARK, LIGHT }
 
@@ -21,6 +22,8 @@ data class WidgetConfig(
     val transparency: Int = 0,
     val showNumbers: Boolean = true,
     val position: ChapterRef = ChapterRef(0, 1),
+    /** 교독문 번호 (새찬송가). */
+    val reading: Int = 1,
     /** 다시 시도할 때 올려서 목록을 새로 불러오게 한다. */
     val revision: Int = 0,
 ) {
@@ -56,6 +59,7 @@ object WidgetPrefs {
             transparency = p.getInt(k + "transparency", defaults.transparency).coerceIn(0, 100),
             showNumbers = p.getBoolean(k + "numbers", defaults.showNumbers),
             position = ChapterRef(bookIndex, chapter),
+            reading = ResponsiveReadings.forNumber(p.getInt(k + "reading", 1)).number,
             revision = p.getInt(k + "rev", 0),
         )
     }
@@ -72,6 +76,7 @@ object WidgetPrefs {
             .putBoolean(k + "numbers", config.showNumbers)
             .putInt(k + "book", config.position.bookIndex)
             .putInt(k + "chapter", config.position.chapter)
+            .putInt(k + "reading", config.reading)
             .putInt(k + "rev", config.revision)
             .apply()
     }
